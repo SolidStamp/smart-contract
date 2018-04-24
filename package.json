@@ -1,0 +1,15 @@
+{
+    "name": "SolidStamp",
+    "scripts": {
+        "test": "truffle test",
+        "build": "truffle compile",
+        "deploy": "truffle migrate"
+    },
+    "devDependencies": {},
+    "dependencies": {
+        "ethereumjs-abi": "^0.6.5",
+        "solc": "^0.4.21",
+        "solium": "^1.1.6",
+        "zeppelin-solidity": "1.8.0"
+    }
+}
