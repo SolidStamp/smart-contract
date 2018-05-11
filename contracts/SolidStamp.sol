@@ -32,7 +32,7 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
     event NewCommission(uint commmission);
 
     /// @notice SolidStamp constructor
-    function SolidStamp() public {
+    constructor() public {
     }
 
     /// @notice Audit request
