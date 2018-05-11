@@ -2,10 +2,12 @@ pragma solidity ^0.4.23;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./Upgradable.sol";
 
 /// @title The main SolidStamp.com contract
 contract SolidStamp is Ownable, Pausable, Upgradable {
+    using SafeMath for uint;
 
     /// @dev const value to indicate the contract is audited and approved
     uint8 public constant NOT_AUDITED = 0x00;
@@ -89,9 +91,9 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
         require(outcome == NOT_AUDITED);
 
         uint currentReward = rewards[hashAuditorCode];
-        uint expireDate = now + _auditTime;
-        rewards[hashAuditorCode] = currentReward + msg.value;
-        totalRequestsAmount += msg.value;
+        uint expireDate = now.add(_auditTime);
+        rewards[hashAuditorCode] = currentReward.add(msg.value);
+        totalRequestsAmount = totalRequestsAmount.add(msg.value);
 
         bytes32 hashAuditorRequestorCode = keccak256(_auditor, msg.sender, _codeHash);
         AuditRequest storage request = auditRequests[hashAuditorRequestorCode];
@@ -104,7 +106,7 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
             emit AuditRequested(_auditor, msg.sender, _codeHash, msg.value, expireDate);
         } else {
             // Request already exists. Increasing value
-            request.amount += msg.value;
+            request.amount = request.amount.add(msg.value);
             // if new expireDate is later than existing one - increase the existing one
             if ( expireDate > request.expireDate )
                 request.expireDate = expireDate;
@@ -133,8 +135,8 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
         uint amount = request.amount;
         delete request.amount;
         delete request.expireDate;
-        rewards[hashAuditorCode] -= amount;
-        totalRequestsAmount -= amount;
+        rewards[hashAuditorCode] = rewards[hashAuditorCode].sub(amount);
+        totalRequestsAmount = totalRequestsAmount.sub(amount);
         emit RequestWithdrawn(_auditor, msg.sender, _codeHash, amount);
         msg.sender.transfer(amount);
     }
@@ -156,11 +158,11 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
         else
             auditOutcomes[hashAuditorCode] = AUDITED_AND_REJECTED;
         uint reward = rewards[hashAuditorCode];
-        totalRequestsAmount -= reward;
+        totalRequestsAmount = totalRequestsAmount.sub(reward);
         commission = calcCommission(reward);
-        availableCommission += commission;
+        availableCommission = availableCommission.add(commission);
         emit ContractAudited(msg.sender, _codeHash, reward, _isApproved);
-        msg.sender.transfer(reward - commission);
+        msg.sender.transfer(reward.sub(commission));
     }
 
     /// @dev const value to indicate the maximum commision service owner can set
@@ -178,7 +180,7 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
     /// @notice calculates the SolidStamp commmission
     /// @param _amount amount to calcuate the commission from
     function calcCommission(uint _amount) private view returns(uint) {
-        return _amount * commission / 100; // service commision
+        return _amount.mul(commission)/100; // service commision
     }
 
     /// @notice ability for owner to withdraw the commission
@@ -186,7 +188,7 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
     function withdrawCommission(uint _amount) public onlyOwner whenNotPaused {
         // cannot withdraw money reserved for requests
         require(_amount <= availableCommission);
-        availableCommission -= _amount;
+        availableCommission = availableCommission.sub(_amount);
         msg.sender.transfer(_amount);
     }
 
