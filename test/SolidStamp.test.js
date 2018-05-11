@@ -161,7 +161,7 @@ contract('SolidStamp', function(accounts) {
                 let result = await ss.auditContract(codeHash, true,
                         {from: auditor});
 
-                eq((await ss.rewards(hash2)).valueOf(), AUDITED_AND_APPROVED, "Contract is not AUDITED");
+                eq((await ss.auditOutcomes(hash2)).valueOf(), AUDITED_AND_APPROVED, "Contract is not AUDITED");
                 eq((await ss.totalRequestsAmount()).valueOf(), 0, "totalRewards is not 0");
                 eq(await web3.eth.getBalance(ss.address).valueOf(), COMISSION, "Contract balance doesn't hold commision")
                 eq(result.logs.length, 1, "Incorrect number of events");

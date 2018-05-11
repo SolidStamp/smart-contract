@@ -8,10 +8,13 @@ import "./Upgradable.sol";
 contract SolidStamp is Ownable, Pausable, Upgradable {
 
     /// @dev const value to indicate the contract is audited and approved
-    uint public constant AUDITED_AND_APPROVED = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
+    uint8 public constant NOT_AUDITED = 0x00;
+
+    /// @dev const value to indicate the contract is audited and approved
+    uint8 public constant AUDITED_AND_APPROVED = 0x01;
 
     /// @dev const value to indicate the contract is audited and rejected
-    uint public constant AUDITED_AND_REJECTED = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE;
+    uint8 public constant AUDITED_AND_REJECTED = 0x02;
 
     /// @dev minimum amount of time for an audit request
     uint public constant MIN_AUDIT_TIME = 24 hours;
@@ -43,12 +46,14 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
     /// @dev Maps auditor and code hash to the total reward offered for auditing
     /// the particular contract by the particular auditor.
     /// Map key is: keccack256(auditor address, contract codeHash)
-    /// Code was already audited by the auditor if value equals AUDITED
     /// @dev codeHash is a sha3 from the contract byte code
     mapping (bytes32 => uint) public rewards;
 
-
-
+    /// @dev Maps auditor and code hash to the outcome of the audit of
+    /// the particular contract by the particular auditor.
+    /// Map key is: keccack256(auditor address, contract codeHash)
+    /// @dev codeHash is a sha3 from the contract byte code
+    mapping (bytes32 => uint8) public auditOutcomes;
 
     /// @dev Maps requestor, auditor and codeHash to an AuditRequest
     /// Map key is: keccack256(auditor address, requestor address, contract codeHash)
@@ -76,14 +81,11 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
 
         bytes32 hashAuditorCode = keccak256(_auditor, _codeHash);
 
-        uint currentReward = rewards[hashAuditorCode];
         // revert if the contract is already audited by the auditor
-        require(currentReward != AUDITED_AND_APPROVED);
-        require(currentReward != AUDITED_AND_REJECTED);
-        // don't allow actors to send flag amounts
-        require(currentReward + msg.value != AUDITED_AND_APPROVED);
-        require(currentReward + msg.value != AUDITED_AND_REJECTED);
+        uint8 outcome = auditOutcomes[hashAuditorCode];
+        require(outcome == NOT_AUDITED);
 
+        uint currentReward = rewards[hashAuditorCode];
         uint expireDate = now + _auditTime;
         rewards[hashAuditorCode] = currentReward + msg.value;
         totalRequestsAmount += msg.value;
@@ -116,10 +118,9 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
     {
         bytes32 hashAuditorCode = keccak256(_auditor, _codeHash);
 
-        // contract cannot be already audited
-        uint reward = rewards[hashAuditorCode];
-        require(reward != AUDITED_AND_APPROVED);
-        require(reward != AUDITED_AND_REJECTED);
+        // revert if the contract is already audited by the auditor
+        uint8 outcome = auditOutcomes[hashAuditorCode];
+        require(outcome == NOT_AUDITED);
 
         bytes32 hashAuditorRequestorCode = keccak256(_auditor, msg.sender, _codeHash);
         AuditRequest storage request = auditRequests[hashAuditorRequestorCode];
@@ -143,15 +144,15 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
     {
         bytes32 hashAuditorCode = keccak256(msg.sender, _codeHash);
 
-        // contract cannot be already audited
-        uint reward = rewards[hashAuditorCode];
-        require(reward != AUDITED_AND_APPROVED);
-        require(reward != AUDITED_AND_REJECTED);
+        // revert if the contract is already audited by the auditor
+        uint8 outcome = auditOutcomes[hashAuditorCode];
+        require(outcome == NOT_AUDITED);
 
         if ( _isApproved )
-            rewards[hashAuditorCode] = AUDITED_AND_APPROVED;
+            auditOutcomes[hashAuditorCode] = AUDITED_AND_APPROVED;
         else
-            rewards[hashAuditorCode] = AUDITED_AND_REJECTED;
+            auditOutcomes[hashAuditorCode] = AUDITED_AND_REJECTED;
+        uint reward = rewards[hashAuditorCode];
         totalRequestsAmount -= reward;
         emit ContractAudited(msg.sender, _codeHash, reward, _isApproved);
         msg.sender.transfer(reward - calcCommission(reward));
