@@ -195,6 +195,8 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
         super.unpause();
     }
 
-    /// @notice We do welcome tips & donations
-    function() payable public { }
+    /// @notice We don't welcome tips & donations
+    function() payable public {
+        revert();
+    }
 }

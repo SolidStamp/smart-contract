@@ -175,13 +175,8 @@ contract('SolidStamp', function(accounts) {
         });
     });
 
-    it("contract should accept ordinary money transfers (tips & donations)", async function(){
-        let amount = 10;
-
-        let beforeBalance = (await web3.eth.getBalance(ss.address)).toNumber();
-        let result = await ss.sendTransaction({from:sender2, value:amount})
-        let afterBalance = (await web3.eth.getBalance(ss.address)).toNumber();
-        eq(beforeBalance+amount, afterBalance, 'Ethers not accepted by contract')
+    it("contract should not accept ordinary money transfers (tips & donations)", async function(){
+        await assertRevert(ss.sendTransaction({from:sender2, value:10}));
     });
 
     describe("#withdrawComission", function () {
