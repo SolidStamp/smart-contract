@@ -1,7 +1,7 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.23;
 
-import "zeppelin-solidity/contracts/ownership/Ownable.sol";
-import "zeppelin-solidity/contracts/lifecycle/Pausable.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
 import "./Upgradable.sol";
 
 /// @title The main SolidStamp.com contract
@@ -46,6 +46,9 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
     /// Code was already audited by the auditor if value equals AUDITED
     /// @dev codeHash is a sha3 from the contract byte code
     mapping (bytes32 => uint) public rewards;
+
+
+
 
     /// @dev Maps requestor, auditor and codeHash to an AuditRequest
     /// Map key is: keccack256(auditor address, requestor address, contract codeHash)
