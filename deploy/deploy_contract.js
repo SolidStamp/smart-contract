@@ -7,9 +7,10 @@ const solc = require('solc');
 // Compile the source code
 var input = {
 	'SolidStamp.sol': fs.readFileSync('contracts/SolidStamp.sol').toString(),
-	'zeppelin-solidity/contracts/ownership/Ownable.sol': fs.readFileSync('node_modules/zeppelin-solidity/contracts/ownership/Ownable.sol').toString(),
-	'zeppelin-solidity/contracts/lifecycle/Pausable.sol': fs.readFileSync('node_modules/zeppelin-solidity/contracts/lifecycle/Pausable.sol').toString(),
     'Upgradable.sol': fs.readFileSync('contracts/Upgradable.sol').toString(),
+	'openzeppelin-solidity/contracts/ownership/Ownable.sol': fs.readFileSync('node_modules/openzeppelin-solidity/contracts/ownership/Ownable.sol').toString(),
+	'openzeppelin-solidity/contracts/lifecycle/Pausable.sol': fs.readFileSync('node_modules/openzeppelin-solidity/contracts/lifecycle/Pausable.sol').toString(),
+	'openzeppelin-solidity/contracts/math/SafeMath.sol': fs.readFileSync('node_modules/openzeppelin-solidity/contracts/math/SafeMath.sol').toString(),
 }
 
 const output = solc.compile({ sources: input}, 1);
