@@ -25,6 +25,9 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
     /// @dev aggregated amount of audit requests
     uint public totalRequestsAmount = 0;
 
+    // @dev amount of collected commision available to withdraw
+    uint public availableCommission = 0;
+
     // @dev commission percentage, initially 9%
     uint public commission = 9;
 
@@ -154,8 +157,10 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
             auditOutcomes[hashAuditorCode] = AUDITED_AND_REJECTED;
         uint reward = rewards[hashAuditorCode];
         totalRequestsAmount -= reward;
+        commission = calcCommission(reward);
+        availableCommission += commission;
         emit ContractAudited(msg.sender, _codeHash, reward, _isApproved);
-        msg.sender.transfer(reward - calcCommission(reward));
+        msg.sender.transfer(reward - commission);
     }
 
     /// @dev const value to indicate the maximum commision service owner can set
@@ -180,7 +185,8 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
     /// @param _amount amount to withdraw
     function withdrawCommission(uint _amount) public onlyOwner whenNotPaused {
         // cannot withdraw money reserved for requests
-        require(_amount < address(this).balance - totalRequestsAmount);
+        require(_amount <= availableCommission);
+        availableCommission -= _amount;
         msg.sender.transfer(_amount);
     }
 
