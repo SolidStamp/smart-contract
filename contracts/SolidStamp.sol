@@ -119,7 +119,7 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
     /// @param _auditor the address of the auditor the request is directed to
     /// @param _codeHash the code hash of the contract to audit. _codeHash equals to sha3 of the contract byte-code
     function withdrawRequest(address _auditor, bytes32 _codeHash)
-    public whenNotPaused
+    public
     {
         bytes32 hashAuditorCode = keccak256(_auditor, _codeHash);
 
@@ -185,7 +185,7 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
 
     /// @notice ability for owner to withdraw the commission
     /// @param _amount amount to withdraw
-    function withdrawCommission(uint _amount) public onlyOwner whenNotPaused {
+    function withdrawCommission(uint _amount) public onlyOwner {
         // cannot withdraw money reserved for requests
         require(_amount <= availableCommission);
         availableCommission = availableCommission.sub(_amount);
