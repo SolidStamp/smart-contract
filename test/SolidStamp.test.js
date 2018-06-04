@@ -135,13 +135,6 @@ contract('SolidStamp', function(accounts) {
                 eq(result.logs.length, 1, "Incorrect number of events");
                 eq(result.logs[0].event, "RequestWithdrawn", "No RequestWithdrawn event triggered");
             });
-
-            it("should revert when the service is paused", async function(){
-                await increaseTime(web3, AUDIT_TIME*2);
-                await ss.pause({from: owner});
-                await assertRevert(ss.withdrawRequest(auditor, codeHash,
-                        {from: sender}));
-            });
         });
     });
 
@@ -197,12 +190,6 @@ contract('SolidStamp', function(accounts) {
                 let gasUsed = result.receipt.cumulativeGasUsed * (await web3.eth.getTransaction(result.tx).gasPrice.toNumber());
                 let afterBalance = web3.eth.getBalance(owner).valueOf();
                 eq(beforeBalance-gasUsed+toWithdraw, afterBalance, 'Couldn\t withdraw commission');
-            });
-
-            it("should revert when service is paused", async function(){
-                await ss.pause({from: owner});
-                let toWithdraw = 1;
-                await assertRevert(ss.withdrawCommission(toWithdraw, {from: owner}));
             });
         });
     });
