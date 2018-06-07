@@ -1,4 +1,4 @@
-# DEXY
+# SOLIDSTAMP
 
  [![License](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 
@@ -30,7 +30,8 @@ truffle test
 #### Mainnet
 [0x0aA7A4482780F67c6B2862Bd68CD67A83faCe355](https://etherscan.io/address/0x0aA7A4482780F67c6B2862Bd68CD67A83faCe355)
 
-#### Ropsten [0x28dEa7e266130Ed89cF12031684c8978ba366d14](https://ropsten.etherscan.io/address/0x28dEa7e266130Ed89cF12031684c8978ba366d14)
+#### Ropsten
+ [0x28dEa7e266130Ed89cF12031684c8978ba366d14](https://ropsten.etherscan.io/address/0x28dEa7e266130Ed89cF12031684c8978ba366d14)
 
 ## Built With
 * [Truffle](https://github.com/trufflesuite/truffle) - Ethereum development environment
