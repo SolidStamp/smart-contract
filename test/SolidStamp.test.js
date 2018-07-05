@@ -50,12 +50,12 @@ contract('SolidStamp', function(accounts) {
             });
 
             it("should do all the needed stuff", async function() {
-                eq( (await ss.rewards(hash2)).valueOf(), 100, "100 Wei is not in rewards");
-                eq( (await ss.auditRequests(hash3))[0].valueOf(), 100, "100 Wei is not in auditRequests");
-                eq( (await ss.auditRequests(hash3))[1].valueOf(),
-                        await web3.eth.getBlock(firstAuditReceipt.receipt.blockNumber).timestamp + AUDIT_TIME, "Incorrect expire date in auditRequests");
+                eq( (await ss.Rewards(hash2)).valueOf(), 100, "100 Wei is not in rewards");
+                eq( (await ss.AuditRequests(hash3))[0].valueOf(), 100, "100 Wei is not in auditRequests");
+                eq( (await ss.AuditRequests(hash3))[1].valueOf(),
+                        await web3.eth.getBlock(firstAuditReceipt.receipt.blockNumber).timestamp + AUDIT_TIME, "Incorrect expire date in AuditRequests");
                 eq(await web3.eth.getBalance(ss.address).valueOf(), 100, "Contract balance is not 100")
-                eq(await ss.totalRequestsAmount().valueOf(), 100, "totalRequestsAmount is not 100")
+                eq(await ss.TotalRequestsAmount().valueOf(), 100, "totalRequestsAmount is not 100")
                 eq(firstAuditReceipt.logs.length, 1, "Incorrect number of alerts");
                 eq(firstAuditReceipt.logs[0].event, "AuditRequested", "No AuditRequested event triggered");
             });
@@ -64,8 +64,8 @@ contract('SolidStamp', function(accounts) {
                 await ss.requestAudit(auditor, codeHash, AUDIT_TIME,
                     {from: sender, value: 200});
 
-                eq( (await ss.rewards(hash2)).valueOf(), 300, "200 Wei is not in rewards");
-                eq( (await ss.auditRequests(hash3))[0].valueOf(), 300, "300 Wei is not in request");
+                eq( (await ss.Rewards(hash2)).valueOf(), 300, "200 Wei is not in rewards");
+                eq( (await ss.AuditRequests(hash3))[0].valueOf(), 300, "300 Wei is not in request");
                 eq( (await web3.eth.getBalance(ss.address)).valueOf(), 300, "Contract balance is not 100")
             });
 
@@ -73,14 +73,14 @@ contract('SolidStamp', function(accounts) {
                 let result = await ss.requestAudit(auditor, codeHash, AUDIT_TIME/2,
                     {from: sender, value: 200});
 
-                assert.notEqual( (await ss.auditRequests(hash3))[1].valueOf(),
+                assert.notEqual( (await ss.AuditRequests(hash3))[1].valueOf(),
                 await web3.eth.getBlock(result.receipt.blockNumber).timestamp + AUDIT_TIME/2, "expireDate changed");
             });
 
             it("should increase expireDate if later then existing", async function(){
                 let result = await ss.requestAudit(auditor, codeHash, AUDIT_TIME*2,
                         {from: sender, value: 200});
-                eq( (await ss.auditRequests(hash3))[1].valueOf(),
+                eq( (await ss.AuditRequests(hash3))[1].valueOf(),
                         await web3.eth.getBlock(result.receipt.blockNumber).timestamp + AUDIT_TIME*2, "expireDate changed");
             });
 
@@ -88,7 +88,7 @@ contract('SolidStamp', function(accounts) {
                 let result = await ss.requestAudit(auditor, codeHash, AUDIT_TIME,
                         {from: sender2, value: 125});
 
-                eq((await ss.rewards(hash2)).valueOf(), 225, "225 Wei not in rewards");
+                eq((await ss.Rewards(hash2)).valueOf(), 225, "225 Wei not in rewards");
             });
 
             it("should revert if contract already audited", async function(){
@@ -119,8 +119,8 @@ contract('SolidStamp', function(accounts) {
             it("should revert if done before the expireDate", async function() {
                 await assertRevert(ss.withdrawRequest(auditor, codeHash,
                     {from: sender}));
-                eq((await ss.rewards(hash2)).valueOf(), FIRST_REWARD + SECOND_REWARD, "800 Wei not in rewards");
-                eq((await ss.auditRequests(hash3))[0].valueOf(), FIRST_REWARD, "300 Wei not in auditRequests");
+                eq((await ss.Rewards(hash2)).valueOf(), FIRST_REWARD + SECOND_REWARD, "800 Wei not in rewards");
+                eq((await ss.AuditRequests(hash3))[0].valueOf(), FIRST_REWARD, "300 Wei not in AuditRequests");
             });
 
             it("should decrease total reward and do all other stuff", async function() {
@@ -128,9 +128,9 @@ contract('SolidStamp', function(accounts) {
                 let result = await ss.withdrawRequest(auditor, codeHash,
                         {from: sender});
 
-                eq((await ss.rewards(hash2)).valueOf(), SECOND_REWARD, "reward not equal to 500");
-                eq((await ss.auditRequests(hash3))[0].valueOf(), 0, "0 Wei not in auditRequests");
-                eq((await ss.totalRequestsAmount()).valueOf(), SECOND_REWARD, "totalRewards is not 100");
+                eq((await ss.Rewards(hash2)).valueOf(), SECOND_REWARD, "reward not equal to 500");
+                eq((await ss.AuditRequests(hash3))[0].valueOf(), 0, "0 Wei not in AuditRequests");
+                eq((await ss.TotalRequestsAmount()).valueOf(), SECOND_REWARD, "TotalRewards is not 100");
                 eq(await web3.eth.getBalance(ss.address).valueOf(), SECOND_REWARD, "Contract balance is not 100");
                 eq(result.logs.length, 1, "Incorrect number of events");
                 eq(result.logs[0].event, "RequestWithdrawn", "No RequestWithdrawn event triggered");
@@ -149,22 +149,22 @@ contract('SolidStamp', function(accounts) {
 
             it("should pay reward and do all other stuff", async function() {
                 const AUDITED_AND_APPROVED = await ss.AUDITED_AND_APPROVED();
-                const COMMISSION = REQEUST_REWARD * (await ss.commission()).toNumber() / 100;
+                const COMMISSION = REQEUST_REWARD * (await ss.Commission()).toNumber() / 100;
 
                 let result = await ss.auditContract(codeHash, true,
                         {from: auditor});
 
-                eq((await ss.auditOutcomes(hash2)).valueOf(), AUDITED_AND_APPROVED, "Contract is not AUDITED");
-                eq((await ss.totalRequestsAmount()).valueOf(), 0, "totalRewards is not 0");
-                eq(await web3.eth.getBalance(ss.address).valueOf(), COMMISSION, "Contract balance doesn't hold commision")
+                eq((await ss.AuditOutcomes(hash2)).valueOf(), AUDITED_AND_APPROVED, "Contract is not AUDITED");
+                eq((await ss.TotalRequestsAmount()).valueOf(), 0, "TotalRewards is not 0");
+                eq(await web3.eth.getBalance(ss.address).valueOf(), COMMISSION, "Contract balance doesn't hold Commision")
                 eq(result.logs.length, 1, "Incorrect number of events");
                 eq(result.logs[0].event, "ContractAudited", "No ContractAudited event triggered");
             });
-            it("should not change commission", async function() {
-                const oldCommission = (await ss.commission()).toNumber();
+            it("should not change Commission", async function() {
+                const oldCommission = (await ss.Commission()).toNumber();
                 let result = await ss.auditContract(codeHash, true,
                         {from: auditor});
-                const newCommission = (await ss.commission()).toNumber();
+                const newCommission = (await ss.Commission()).toNumber();
                 eq(oldCommission, newCommission, "Commission changed in auditContract");
             })
             it("should revert when the service is paused", async function(){
@@ -196,6 +196,7 @@ contract('SolidStamp', function(accounts) {
                 let result = (await ss.withdrawCommission(toWithdraw, {from: owner}));
                 let gasUsed = result.receipt.cumulativeGasUsed * (await web3.eth.getTransaction(result.tx).gasPrice.toNumber());
                 let afterBalance = web3.eth.getBalance(owner).valueOf();
+                console.log(beforeBalance, gasUsed, toWithdraw, afterBalance);
                 eq(beforeBalance-gasUsed+toWithdraw, afterBalance, 'Couldn\'t withdraw commission');
             });
         });
@@ -212,7 +213,7 @@ contract('SolidStamp', function(accounts) {
         it("should set new commission", async function(){
             let newCommission = await ss.MAX_COMMISION();
             let result = await ss.changeCommission(newCommission, {from: owner});
-            let afterCommission = (await ss.commission()).valueOf();
+            let afterCommission = (await ss.Commission()).valueOf();
             eq(newCommission, afterCommission, 'Couldn\'t change commission')
         });
         it("should revert when service is paused", async function(){
