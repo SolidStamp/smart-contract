@@ -191,12 +191,11 @@ contract('SolidStamp', function(accounts) {
             });
 
             it("should withdraw funds", async function(){
-                let beforeBalance = web3.eth.getBalance(owner).valueOf();
+                let beforeBalance = Number(web3.eth.getBalance(owner));
                 let toWithdraw = 1;
                 let result = (await ss.withdrawCommission(toWithdraw, {from: owner}));
-                let gasUsed = result.receipt.cumulativeGasUsed * (await web3.eth.getTransaction(result.tx).gasPrice.toNumber());
-                let afterBalance = web3.eth.getBalance(owner).valueOf();
-                console.log(beforeBalance, gasUsed, toWithdraw, afterBalance);
+                let gasUsed = result.receipt.cumulativeGasUsed * (await web3.eth.getTransaction(result.tx).gasPrice);
+                let afterBalance = Number(web3.eth.getBalance(owner));
                 eq(beforeBalance-gasUsed+toWithdraw, afterBalance, 'Couldn\'t withdraw commission');
             });
         });
