@@ -84,7 +84,7 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
         require(_auditTime <= MAX_AUDIT_TIME);
         require(msg.value > 0);
 
-        bytes32 hashAuditorCode = keccak256(_auditor, _codeHash);
+        bytes32 hashAuditorCode = keccak256(abi.encodePacked(_auditor, _codeHash));
 
         // revert if the contract is already audited by the auditor
         uint8 outcome = AuditOutcomes[hashAuditorCode];
@@ -95,7 +95,7 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
         Rewards[hashAuditorCode] = currentReward.add(msg.value);
         TotalRequestsAmount = TotalRequestsAmount.add(msg.value);
 
-        bytes32 hashAuditorRequestorCode = keccak256(_auditor, msg.sender, _codeHash);
+        bytes32 hashAuditorRequestorCode = keccak256(abi.encodePacked(_auditor, msg.sender, _codeHash));
         AuditRequest storage request = AuditRequests[hashAuditorRequestorCode];
         if ( request.amount == 0 ) {
             // first request from msg.sender to audit contract _codeHash by _auditor
@@ -121,13 +121,13 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
     function withdrawRequest(address _auditor, bytes32 _codeHash)
     public
     {
-        bytes32 hashAuditorCode = keccak256(_auditor, _codeHash);
+        bytes32 hashAuditorCode = keccak256(abi.encodePacked(_auditor, _codeHash));
 
         // revert if the contract is already audited by the auditor
         uint8 outcome = AuditOutcomes[hashAuditorCode];
         require(outcome == NOT_AUDITED);
 
-        bytes32 hashAuditorRequestorCode = keccak256(_auditor, msg.sender, _codeHash);
+        bytes32 hashAuditorRequestorCode = keccak256(abi.encodePacked(_auditor, msg.sender, _codeHash));
         AuditRequest storage request = AuditRequests[hashAuditorRequestorCode];
         require(request.amount > 0);
         require(now > request.expireDate);
@@ -147,7 +147,7 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
     function auditContract(bytes32 _codeHash, bool _isApproved)
     public whenNotPaused
     {
-        bytes32 hashAuditorCode = keccak256(msg.sender, _codeHash);
+        bytes32 hashAuditorCode = keccak256(abi.encodePacked(msg.sender, _codeHash));
 
         // revert if the contract is already audited by the auditor
         uint8 outcome = AuditOutcomes[hashAuditorCode];
