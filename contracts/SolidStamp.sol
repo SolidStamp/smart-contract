@@ -1,9 +1,10 @@
-pragma solidity ^0.4.23;
+pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./Upgradable.sol";
+import "./SolidStampRegister.sol";
 
 /// @title The main SolidStamp.com contract
 contract SolidStamp is Ownable, Pausable, Upgradable {
@@ -11,12 +12,6 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
 
     /// @dev const value to indicate the contract is audited and approved
     uint8 public constant NOT_AUDITED = 0x00;
-
-    /// @dev const value to indicate the contract is audited and approved
-    uint8 public constant AUDITED_AND_APPROVED = 0x01;
-
-    /// @dev const value to indicate the contract is audited and rejected
-    uint8 public constant AUDITED_AND_REJECTED = 0x02;
 
     /// @dev minimum amount of time for an audit request
     uint public constant MIN_AUDIT_TIME = 24 hours;
@@ -36,8 +31,11 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
     /// @dev event fired when the service commission is changed
     event NewCommission(uint commmission);
 
+    address public SolidStampRegisterAddress;
+
     /// @notice SolidStamp constructor
-    constructor() public {
+    constructor(address _addressRegistrySolidStamp) public {
+        SolidStampRegisterAddress = _addressRegistrySolidStamp;
     }
 
     /// @notice Audit request
@@ -53,12 +51,6 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
     /// Map key is: keccack256(auditor address, contract codeHash)
     /// @dev codeHash is a sha3 from the contract byte code
     mapping (bytes32 => uint) public Rewards;
-
-    /// @dev Maps auditor and code hash to the outcome of the audit of
-    /// the particular contract by the particular auditor.
-    /// Map key is: keccack256(auditor address, contract codeHash)
-    /// @dev codeHash is a sha3 from the contract byte code
-    mapping (bytes32 => uint8) public AuditOutcomes;
 
     /// @dev Maps requestor, auditor and codeHash to an AuditRequest
     /// Map key is: keccack256(auditor address, requestor address, contract codeHash)
@@ -84,12 +76,11 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
         require(_auditTime <= MAX_AUDIT_TIME);
         require(msg.value > 0);
 
-        bytes32 hashAuditorCode = keccak256(abi.encodePacked(_auditor, _codeHash));
-
         // revert if the contract is already audited by the auditor
-        uint8 outcome = AuditOutcomes[hashAuditorCode];
+        uint8 outcome = SolidStampRegister(SolidStampRegisterAddress).getAuditOutcome(_auditor, _codeHash);
         require(outcome == NOT_AUDITED);
 
+        bytes32 hashAuditorCode = keccak256(abi.encodePacked(_auditor, _codeHash));
         uint currentReward = Rewards[hashAuditorCode];
         uint expireDate = now.add(_auditTime);
         Rewards[hashAuditorCode] = currentReward.add(msg.value);
@@ -124,7 +115,7 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
         bytes32 hashAuditorCode = keccak256(abi.encodePacked(_auditor, _codeHash));
 
         // revert if the contract is already audited by the auditor
-        uint8 outcome = AuditOutcomes[hashAuditorCode];
+        uint8 outcome = SolidStampRegister(SolidStampRegisterAddress).getAuditOutcome(_auditor, _codeHash);
         require(outcome == NOT_AUDITED);
 
         bytes32 hashAuditorRequestorCode = keccak256(abi.encodePacked(_auditor, msg.sender, _codeHash));
@@ -150,13 +141,10 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
         bytes32 hashAuditorCode = keccak256(abi.encodePacked(msg.sender, _codeHash));
 
         // revert if the contract is already audited by the auditor
-        uint8 outcome = AuditOutcomes[hashAuditorCode];
+        uint8 outcome = SolidStampRegister(SolidStampRegisterAddress).getAuditOutcome(msg.sender, _codeHash);
         require(outcome == NOT_AUDITED);
 
-        if ( _isApproved )
-            AuditOutcomes[hashAuditorCode] = AUDITED_AND_APPROVED;
-        else
-            AuditOutcomes[hashAuditorCode] = AUDITED_AND_REJECTED;
+        SolidStampRegister(SolidStampRegisterAddress).registerAuditOutcome(msg.sender, _codeHash, _isApproved);
         uint reward = Rewards[hashAuditorCode];
         TotalRequestsAmount = TotalRequestsAmount.sub(reward);
         uint commissionKept = calcCommission(reward);

@@ -4,16 +4,19 @@ const assertRevert = require("./helpers/assertRevert.js");
 const increaseTime = require("./helpers/increaseTime");
 
 const SolidStamp = artifacts.require("SolidStamp");
+const SolidStampRegister = artifacts.require("SolidStampRegister");
 
 contract('SolidStamp', function(accounts) {
     const eq = assert.equal.bind(assert);
     const [owner, codeHash, auditor, sender2, sender, /* rest */] = accounts;
     const AUDIT_TIME = 60*60*24*2; // 2 days
 
-    let ss;
+    let ss, ssr;
 
     beforeEach(async function () {
-        ss = await SolidStamp.new({from: owner});
+        ssr = await SolidStampRegister.new({from: owner});
+        ss = await SolidStamp.new(ssr.address, {from: owner});
+        await ssr.changeSolidStampContract(ss.address);
         hash2 = '0x' + abi.soliditySHA3(
             [ "address", "bytes32" ],
             [ auditor, codeHash ]
@@ -148,13 +151,13 @@ contract('SolidStamp', function(accounts) {
             });
 
             it("should pay reward and do all other stuff", async function() {
-                const AUDITED_AND_APPROVED = await ss.AUDITED_AND_APPROVED();
+                const AUDITED_AND_APPROVED = await ssr.AUDITED_AND_APPROVED();
                 const COMMISSION = REQEUST_REWARD * (await ss.Commission()).toNumber() / 100;
 
                 let result = await ss.auditContract(codeHash, true,
                         {from: auditor});
 
-                eq((await ss.AuditOutcomes(hash2)).valueOf(), AUDITED_AND_APPROVED, "Contract is not AUDITED");
+                eq((await ssr.AuditOutcomes(hash2)).valueOf(), AUDITED_AND_APPROVED, "Contract is not AUDITED");
                 eq((await ss.TotalRequestsAmount()).valueOf(), 0, "TotalRewards is not 0");
                 eq(await web3.eth.getBalance(ss.address).valueOf(), COMMISSION, "Contract balance doesn't hold Commision")
                 eq(result.logs.length, 1, "Incorrect number of events");
