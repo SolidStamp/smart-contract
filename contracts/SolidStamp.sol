@@ -159,10 +159,10 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
             auditOutcomes[hashAuditorCode] = AUDITED_AND_REJECTED;
         uint reward = rewards[hashAuditorCode];
         totalRequestsAmount = totalRequestsAmount.sub(reward);
-        commission = calcCommission(reward);
-        availableCommission = availableCommission.add(commission);
+        uint commissionKept = calcCommission(reward);
+        availableCommission = availableCommission.add(commissionKept);
         emit ContractAudited(msg.sender, _codeHash, reward, _isApproved);
-        msg.sender.transfer(reward.sub(commission));
+        msg.sender.transfer(reward.sub(commissionKept));
     }
 
     /// @dev const value to indicate the maximum commision service owner can set
