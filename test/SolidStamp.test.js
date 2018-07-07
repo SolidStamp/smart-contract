@@ -14,7 +14,7 @@ contract('SolidStamp', function(accounts) {
     let ss, ssr;
 
     beforeEach(async function () {
-        ssr = await SolidStampRegister.new({from: owner});
+        ssr = await SolidStampRegister.new([],[],[], {from: owner});
         ss = await SolidStamp.new(ssr.address, {from: owner});
         await ssr.changeSolidStampContract(ss.address);
         hash2 = '0x' + abi.soliditySHA3(
