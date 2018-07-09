@@ -109,7 +109,10 @@ contract('SolidStamp', function(accounts) {
     });
 
     describe("#withdrawRequest", function () {
-        it("should fail without audit");
+        it("should fail without audit", async function() {
+            await assertRevert(ss.withdrawRequest(auditor, codeHash,
+                {from: sender}));
+        });
 
         describe("with two existing requests", function () {
             const FIRST_REWARD = 300;
@@ -142,8 +145,6 @@ contract('SolidStamp', function(accounts) {
     });
 
     describe("#auditContract", function () {
-        it("should fail without request");
-
         describe("with a audit request", function () {
             const REQEUST_REWARD = 200;
             beforeEach(async function () {
@@ -197,7 +198,7 @@ contract('SolidStamp', function(accounts) {
                 let beforeBalance = Number(web3.eth.getBalance(owner));
                 let toWithdraw = 1;
                 let result = (await ss.withdrawCommission(toWithdraw, {from: owner}));
-                let gasUsed = result.receipt.cumulativeGasUsed * (await web3.eth.getTransaction(result.tx).gasPrice);
+                let gasUsed = Number(result.receipt.cumulativeGasUsed * (await web3.eth.getTransaction(result.tx).gasPrice));
                 let afterBalance = Number(web3.eth.getBalance(owner));
                 eq(beforeBalance-gasUsed+toWithdraw, afterBalance, 'Couldn\'t withdraw commission');
             });
@@ -224,6 +225,4 @@ contract('SolidStamp', function(accounts) {
             await assertRevert(ss.changeCommission(newCommission, {from: owner}));
         });
     });
-
-    it("check makeOffer for audited contract");
 });
