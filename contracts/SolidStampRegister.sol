@@ -38,20 +38,23 @@ contract SolidStampRegister is Ownable
         require(noOfExistingAudits == _existingCodeHashes.length);
         require(noOfExistingAudits == _outcomes.length);
 
+        // set contract address temporarily to owner so that registerAuditOutcome does not revert
+        contractSolidStamp = msg.sender;
         for (uint i=0; i<noOfExistingAudits; i++){
             registerAuditOutcome(_existingAuditors[i], _existingCodeHashes[i], _outcomes[i]);
         }
+        contractSolidStamp = 0x0;
     }
 
     function getAuditOutcome(address _auditor, bytes32 _codeHash) public view returns (uint8)
     {
-        require(_auditor != 0x0);
         bytes32 hashAuditorCode = keccak256(abi.encodePacked(_auditor, _codeHash));
         return AuditOutcomes[hashAuditorCode];
     }
 
     function registerAuditOutcome(address _auditor, bytes32 _codeHash, bool _isApproved) public onlySolidStampContract
     {
+        require(_auditor != 0x0);
         bytes32 hashAuditorCode = keccak256(abi.encodePacked(_auditor, _codeHash));
         if ( _isApproved )
             AuditOutcomes[hashAuditorCode] = AUDITED_AND_APPROVED;
@@ -61,7 +64,7 @@ contract SolidStampRegister is Ownable
     }
 
 
-    event SolidStampContractChanged(address indexed newSolidStamp);
+    event SolidStampContractChanged(address newSolidStamp);
     /**
      * @dev Throws if called by any account other than the contractSolidStamp
      */
