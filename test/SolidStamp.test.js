@@ -160,7 +160,7 @@ contract('SolidStamp', function(accounts) {
 
                 eq((await ssr.AuditOutcomes(hash2)).valueOf(), AUDITED_AND_APPROVED, "Contract is not AUDITED");
                 eq((await ss.TotalRequestsAmount()).valueOf(), 0, "TotalRewards is not 0");
-                eq(await web3.eth.getBalance(ss.address).valueOf(), COMMISSION, "Contract balance doesn't hold Commision")
+                eq(await web3.eth.getBalance(ss.address).valueOf(), COMMISSION, "Contract balance doesn't hold Commission")
                 eq(result.logs.length, 1, "Incorrect number of events");
                 eq(result.logs[0].event, "ContractAudited", "No ContractAudited event triggered");
             });
@@ -209,19 +209,19 @@ contract('SolidStamp', function(accounts) {
         it("should revert if called not by owner", async function(){
             await assertRevert(ss.changeCommission(1, {from: sender}));
         });
-        it("should revert if commission bigger than max commision", async function(){
-            const MAX_COMMISION = await ss.MAX_COMMISION();
-            await assertRevert(ss.changeCommission(MAX_COMMISION.plus(1), {from: owner}));
+        it("should revert if commission bigger than max commission", async function(){
+            const MAX_COMMISSION = await ss.MAX_COMMISSION();
+            await assertRevert(ss.changeCommission(MAX_COMMISSION.plus(1), {from: owner}));
         });
         it("should set new commission", async function(){
-            let newCommission = await ss.MAX_COMMISION();
+            let newCommission = await ss.MAX_COMMISSION();
             let result = await ss.changeCommission(newCommission, {from: owner});
             let afterCommission = (await ss.Commission()).valueOf();
             eq(newCommission, afterCommission, 'Couldn\'t change commission')
         });
         it("should revert when service is paused", async function(){
             await ss.pause({from: owner});
-            let newCommission = await ss.MAX_COMMISION();
+            let newCommission = await ss.MAX_COMMISSION();
             await assertRevert(ss.changeCommission(newCommission, {from: owner}));
         });
     });
