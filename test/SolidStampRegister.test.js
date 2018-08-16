@@ -11,24 +11,13 @@ contract('SolidStampRegister', function(accounts) {
     let ssr, NOT_AUDITED, AUDITED_AND_APPROVED, AUDITED_AND_REJECTED;
 
     beforeEach(async function () {
-        ssr = await SolidStampRegister.new([auditor, auditor2],[codeHash, codeHash2],[true, false], {from: owner});
+        ssr = await SolidStampRegister.new({from: owner});
         NOT_AUDITED = await ssr.NOT_AUDITED();
         AUDITED_AND_APPROVED = await ssr.AUDITED_AND_APPROVED();
         AUDITED_AND_REJECTED = await ssr.AUDITED_AND_REJECTED();
         await ssr.changeSolidStampContract(contract);
     });
 
-    describe("#constructor", function () {
-        it("should revert on length of arguments mismatch", async function() {
-            await assertRevert(SolidStampRegister.new([],[],[true], {from: owner}));
-            await assertRevert(SolidStampRegister.new([],[0x0],[], {from: owner}));
-            await assertRevert(SolidStampRegister.new([0x0],[],[true], {from: owner}));
-        });
-        it("should register audits upon contract constuction", async function() {
-            eq((await ssr.getAuditOutcome(auditor, codeHash, {from: sender})).valueOf(), AUDITED_AND_APPROVED.valueOf(), '1st audit not registered');
-            eq((await ssr.getAuditOutcome(auditor2, codeHash2, {from: sender})).valueOf(), AUDITED_AND_REJECTED.valueOf(), '2nd audit not registered');
-        });
-    });
     describe("#getAuditOutcome", function() {
         it("should return registered audit", async function() {
             await ssr.registerAuditOutcome(auditor, codeHash2, false, {from: contract});

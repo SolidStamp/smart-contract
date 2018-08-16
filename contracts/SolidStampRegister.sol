@@ -27,23 +27,7 @@ contract SolidStampRegister is Ownable
     event AuditRegistered(address auditor, bytes32 codeHash, bool isApproved);
 
     /// @notice SolidStampRegister constructor
-    /// @dev import audits from the SolidStamp v1 contract deployed to: 0x0aA7A4482780F67c6B2862Bd68CD67A83faCe355
-    /// @param _existingAuditors list of existing auditors
-    /// @param _existingCodeHashes list of existing code hashes
-    /// @param _outcomes list of existing audit outcomes
-    /// @dev each n-th element represents an existing audit conducted by _existingAuditors[n]
-    /// on code hash _existingCodeHashes[n] with an outcome _outcomes[n]
-    constructor(address[] _existingAuditors, bytes32[] _existingCodeHashes, bool[] _outcomes) public {
-        uint noOfExistingAudits = _existingAuditors.length;
-        require(noOfExistingAudits == _existingCodeHashes.length, "paramters mismatch");
-        require(noOfExistingAudits == _outcomes.length, "paramters mismatch");
-
-        // set contract address temporarily to owner so that registerAuditOutcome does not revert
-        contractSolidStamp = msg.sender;
-        for (uint i=0; i<noOfExistingAudits; i++){
-            registerAuditOutcome(_existingAuditors[i], _existingCodeHashes[i], _outcomes[i]);
-        }
-        contractSolidStamp = 0x0;
+    constructor() public {
     }
 
     function getAuditOutcome(address _auditor, bytes32 _codeHash) public view returns (uint8)
