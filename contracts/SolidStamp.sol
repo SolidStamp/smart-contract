@@ -61,7 +61,7 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
     /// @dev event fired when an request is sucessfully withdrawn
     event RequestWithdrawn(address auditor, address bidder, bytes32 codeHash, uint amount);
     /// @dev event fired when a contract is sucessfully audited
-    event ContractAudited(address auditor, bytes32 codeHash, uint reward, bool isApproved);
+    event ContractAudited(address auditor, bytes32 codeHash, bytes reportIPFS, bool isApproved, uint reward);
 
     /// @notice registers an audit request
     /// @param _auditor the address of the auditor the request is directed to
@@ -134,22 +134,23 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
 
     /// @notice marks contract as audited
     /// @param _codeHash the code hash of the stamped contract. _codeHash equals to sha3 of the contract byte-code
+    /// @param _reportIPFS IPFS hash of the audit report
     /// @param _isApproved whether the contract is approved or rejected
-    function auditContract(bytes32 _codeHash, bool _isApproved)
+    function auditContract(bytes32 _codeHash, bytes _reportIPFS, bool _isApproved)
     public whenNotPaused
     {
-        bytes32 hashAuditorCode = keccak256(abi.encodePacked(msg.sender, _codeHash));
-
         // revert if the contract is already audited by the auditor
         uint8 outcome = SolidStampRegister(SolidStampRegisterAddress).getAuditOutcome(msg.sender, _codeHash);
         require(outcome == NOT_AUDITED, "contract already audited");
 
-        SolidStampRegister(SolidStampRegisterAddress).registerAuditOutcome(msg.sender, _codeHash, _isApproved);
+        SolidStampRegister(SolidStampRegisterAddress).registerAudit(msg.sender, _codeHash, _reportIPFS, _isApproved);
+
+        bytes32 hashAuditorCode = keccak256(abi.encodePacked(msg.sender, _codeHash));
         uint reward = Rewards[hashAuditorCode];
         TotalRequestsAmount = TotalRequestsAmount.sub(reward);
         uint commissionKept = calcCommission(reward);
         AvailableCommission = AvailableCommission.add(commissionKept);
-        emit ContractAudited(msg.sender, _codeHash, reward, _isApproved);
+        emit ContractAudited(msg.sender, _codeHash, _reportIPFS, _isApproved, reward);
         msg.sender.transfer(reward.sub(commissionKept));
     }
 
