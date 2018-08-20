@@ -154,6 +154,19 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
         msg.sender.transfer(reward.sub(commissionKept));
     }
 
+    /// @notice marks multiple contracts as audited
+    /// @param _codeHashes the code hashes of the stamped contracts. each _codeHash equals to sha3 of the contract byte-code
+    /// @param _reportIPFS IPFS hash of the audit report
+    /// @param _isApproved whether the contracts are approved or rejected
+    function auditContracts(bytes32[] _codeHashes, bytes _reportIPFS, bool _isApproved)
+    public whenNotPaused
+    {
+        for(uint i=0; i<_codeHashes.length; i++ )
+        {
+            auditContract(_codeHashes[i], _reportIPFS, _isApproved);
+        }
+    }
+
     /// @dev const value to indicate the maximum commision service owner can set
     uint public constant MAX_COMMISSION = 33;
 
