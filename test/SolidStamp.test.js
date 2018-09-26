@@ -99,7 +99,7 @@ contract('SolidStamp', function(accounts) {
             });
 
             it("should revert if contract already audited", async function(){
-                await ss.auditContract(codeHash, reportIPFS, true, { from: auditor });
+                await ssr.registerAudit(codeHash, reportIPFS, true, { from: auditor });
 
                 await assertRevert(ss.requestAudit(auditor, codeHash, AUDIT_TIME,
                             {from: sender, value: 100}));
@@ -149,34 +149,33 @@ contract('SolidStamp', function(accounts) {
     });
 
     describe("#auditContract", function () {
+        it("should revert if called not by the SolidStampRegister contract", async function() {
+            await assertRevert(ss.auditContract(auditor, codeHash, reportIPFS, false, {from: sender}))
+        })
         describe("with an audit request", function () {
             const REQEUST_REWARD = 200;
             beforeEach(async function () {
                 await ss.requestAudit(auditor, codeHash, AUDIT_TIME, {from:sender, value: REQEUST_REWARD});
             });
-
             it("should pay reward and do all other stuff", async function() {
                 const AUDITED_AND_APPROVED = await ssr.AUDITED_AND_APPROVED();
                 const COMMISSION = REQEUST_REWARD * (await ss.Commission()).toNumber() / 100;
 
-                let result = await ss.auditContract(codeHash, reportIPFS, true,
-                        {from: auditor});
+                let result = await ssr.registerAudit(codeHash, reportIPFS, true, {from: auditor});
 
                 eq((await ss.TotalRequestsAmount()).valueOf(), 0, "TotalRewards is not 0");
                 eq(await web3.eth.getBalance(ss.address).valueOf(), COMMISSION, "Contract balance doesn't hold Commission")
-                eq(result.logs.length, 1, "Incorrect number of events");
-                eq(result.logs[0].event, "ContractAudited", "No ContractAudited event triggered");
             });
             it("should not change Commission", async function() {
                 const oldCommission = (await ss.Commission()).toNumber();
-                let result = await ss.auditContract(codeHash, reportIPFS, true,
+                let result = await ssr.registerAudit(codeHash, reportIPFS, true,
                         {from: auditor});
                 const newCommission = (await ss.Commission()).toNumber();
                 eq(oldCommission, newCommission, "Commission changed in auditContract");
             })
             it("should revert when the service is paused", async function(){
                 await ss.pause({from: owner});
-                await assertRevert(ss.auditContract(codeHash, reportIPFS, true,
+                await assertRevert(ssr.registerAudit(codeHash, reportIPFS, true,
                         {from: auditor}));
             });
         });
@@ -190,7 +189,7 @@ contract('SolidStamp', function(accounts) {
         describe("with existing commission", function () {
             beforeEach(async function () {
                 await ss.requestAudit(auditor, codeHash, AUDIT_TIME, {from: sender, value: 100});
-                await ss.auditContract(codeHash, reportIPFS, true, {from: auditor});
+                await ssr.registerAudit(codeHash, reportIPFS, true, {from: auditor});
             });
 
             it("should revert if called not by owner", async function(){

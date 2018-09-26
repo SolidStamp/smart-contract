@@ -132,39 +132,29 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
         msg.sender.transfer(amount);
     }
 
-    /// @notice marks contract as audited
+    /// @notice transfers reward to the auditor. Called by SolidStampRegister after the contract is audited
+    /// @param _auditor the auditor who audited the contract
     /// @param _codeHash the code hash of the stamped contract. _codeHash equals to sha3 of the contract byte-code
     /// @param _reportIPFS IPFS hash of the audit report
     /// @param _isApproved whether the contract is approved or rejected
-    function auditContract(bytes32 _codeHash, bytes _reportIPFS, bool _isApproved)
-    public whenNotPaused
+    function auditContract(address _auditor, bytes32 _codeHash, bytes _reportIPFS, bool _isApproved)
+    public whenNotPaused onlySolidStampRegisterContract
     {
-        // revert if the contract is already audited by the auditor
-        uint8 outcome = SolidStampRegister(SolidStampRegisterAddress).getAuditOutcome(msg.sender, _codeHash);
-        require(outcome == NOT_AUDITED, "contract already audited");
-
-        SolidStampRegister(SolidStampRegisterAddress).registerAudit(msg.sender, _codeHash, _reportIPFS, _isApproved);
-
-        bytes32 hashAuditorCode = keccak256(abi.encodePacked(msg.sender, _codeHash));
+        bytes32 hashAuditorCode = keccak256(abi.encodePacked(_auditor, _codeHash));
         uint reward = Rewards[hashAuditorCode];
         TotalRequestsAmount = TotalRequestsAmount.sub(reward);
         uint commissionKept = calcCommission(reward);
         AvailableCommission = AvailableCommission.add(commissionKept);
-        emit ContractAudited(msg.sender, _codeHash, _reportIPFS, _isApproved, reward);
-        msg.sender.transfer(reward.sub(commissionKept));
+        emit ContractAudited(_auditor, _codeHash, _reportIPFS, _isApproved, reward);
+        _auditor.transfer(reward.sub(commissionKept));
     }
 
-    /// @notice marks multiple contracts as audited
-    /// @param _codeHashes the code hashes of the stamped contracts. each _codeHash equals to sha3 of the contract byte-code
-    /// @param _reportIPFS IPFS hash of the audit report
-    /// @param _isApproved whether the contracts are approved or rejected
-    function auditContracts(bytes32[] _codeHashes, bytes _reportIPFS, bool _isApproved)
-    public whenNotPaused
-    {
-        for(uint i=0; i<_codeHashes.length; i++ )
-        {
-            auditContract(_codeHashes[i], _reportIPFS, _isApproved);
-        }
+    /**
+     * @dev Throws if called by any account other than the contractSolidStamp
+     */
+    modifier onlySolidStampRegisterContract() {
+      require(msg.sender == SolidStampRegisterAddress, "can be only run by SolidStampRegister contract");
+      _;
     }
 
     /// @dev const value to indicate the maximum commision service owner can set
