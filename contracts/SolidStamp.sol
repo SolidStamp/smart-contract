@@ -25,8 +25,8 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
     // @dev amount of collected commision available to withdraw
     uint public AvailableCommission = 0;
 
-    // @dev commission percentage, initially 9%
-    uint public Commission = 9;
+    // @dev commission percentage, initially 1%
+    uint public Commission = 1;
 
     /// @dev event fired when the service commission is changed
     event NewCommission(uint commmission);
@@ -158,7 +158,7 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
     }
 
     /// @dev const value to indicate the maximum commision service owner can set
-    uint public constant MAX_COMMISSION = 33;
+    uint public constant MAX_COMMISSION = 9;
 
     /// @notice ability for owner to change the service commmission
     /// @param _newCommission new commision percentage
