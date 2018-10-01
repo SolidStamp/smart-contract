@@ -99,4 +99,9 @@ contract SolidStampRegister is Ownable
       emit SolidStampContractChanged(_newSolidStamp);
       ContractSolidStamp = _newSolidStamp;
     }
+
+    /// @notice We don't want your arbitrary ether
+    function() payable public {
+        revert();
+    }    
 }
