@@ -81,7 +81,7 @@ contract SolidStampRegister is Ownable
     /// @param _codeHashes the code hashes of the stamped contracts. each _codeHash equals to sha3 of the contract byte-code
     /// @param _reportIPFS IPFS hash of the audit report
     /// @param _isApproved whether the contracts are approved or rejected
-    function auditContracts(bytes32[] _codeHashes, bytes _reportIPFS, bool _isApproved) public
+    function registerAudits(bytes32[] _codeHashes, bytes _reportIPFS, bool _isApproved) public
     {
         for(uint i=0; i<_codeHashes.length; i++ )
         {

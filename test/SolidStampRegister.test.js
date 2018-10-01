@@ -69,6 +69,17 @@ contract('SolidStampRegister', function(accounts) {
             await assertRevert(ssr.registerAudit(codeHash2, reportIPFS, false, {from: auditor}));
         })
     });
+    describe("#registerAudits", function () {
+        it("should register multiple audits", async function() {
+            const AUDITED_AND_APPROVED = await ssr.AUDITED_AND_APPROVED();
+            let result = await ssr.registerAudits([codeHash, codeHash2], reportIPFS, true, {from: auditor});
+            eq((await ssr.getAuditReportIPFS(auditor, codeHash, {from: sender})).valueOf(), web3.toHex(reportIPFS), 'Audit not registered');
+            eq((await ssr.getAuditReportIPFS(auditor, codeHash2, {from: sender})).valueOf(), web3.toHex(reportIPFS), 'Audit not registered');
+            eq((await ssr.getAuditOutcome(auditor, codeHash, {from: sender})).valueOf(), AUDITED_AND_APPROVED.valueOf(), 'Incorrect return for audited contract');
+            eq((await ssr.getAuditOutcome(auditor, codeHash2, {from: sender})).valueOf(), AUDITED_AND_APPROVED.valueOf(), 'Incorrect return for audited contract');
+        });
+
+    })    
     describe("#changeSolidStampContract", function() {
         it("should fail if not called by owner", async function() {
             await assertRevert(ssr.changeSolidStampContract(sender2, {from: sender}))
