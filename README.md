@@ -34,9 +34,9 @@ SolidStamp [0x16964D770439B1d2Ae84EC96a18eDb1657CFfEcF](https://etherscan.io/add
 
 
 #### Ropsten
-SolidStampRegister [0x4ad5766168f631aea2b6e5bbcfa1553e05f25c47](https://etherscan.io/address/0x4ad5766168f631aea2b6e5bbcfa1553e05f25c47)
+SolidStampRegister [0x77dbc13b80f2bbc31b92a40abb8c22e0e9b879d4](https://etherscan.io/address/0x77dbc13b80f2bbc31b92a40abb8c22e0e9b879d4)
 
-SolidStamp [0x81d5c4488f3a5ffd8b3a7445f7d6ee943c38eba7](https://etherscan.io/address/0x81d5c4488f3a5ffd8b3a7445f7d6ee943c38eba7)
+SolidStamp [0x8E12DFa382aE33563c77A1a62536D4F6Bf6D0d2F](https://etherscan.io/address/0x8E12DFa382aE33563c77A1a62536D4F6Bf6D0d2F)
 
 ## Built With
 * [Truffle](https://github.com/trufflesuite/truffle) - Ethereum development environment
