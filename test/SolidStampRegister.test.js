@@ -79,7 +79,7 @@ contract('SolidStampRegister', function(accounts) {
             eq((await ssr.getAuditOutcome(auditor, codeHash2, {from: sender})).valueOf(), AUDITED_AND_APPROVED.valueOf(), 'Incorrect return for audited contract');
         });
 
-    })    
+    })
     describe("#changeSolidStampContract", function() {
         it("should fail if not called by owner", async function() {
             await assertRevert(ssr.changeSolidStampContract(sender2, {from: sender}))
@@ -95,4 +95,8 @@ contract('SolidStampRegister', function(accounts) {
             eq(result.logs[0].args['newSolidStamp'], sender2, 'Wrong event data (newSolidStamp)');
         });
     });
+
+    it("contract should not accept arbitrary ether", async function(){
+        await assertRevert(ss.sendTransaction({from:sender2, value:10}));
+    });    
 });

@@ -181,7 +181,7 @@ contract('SolidStamp', function(accounts) {
         });
     });
 
-    it("contract should not accept ordinary money transfers (tips & donations)", async function(){
+    it("contract should not accept arbitrary ether", async function(){
         await assertRevert(ss.sendTransaction({from:sender2, value:10}));
     });
 
