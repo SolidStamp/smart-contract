@@ -1,66 +1,85 @@
 const abi = require("ethereumjs-abi");
+const crypto = require("crypto")
 
+const randomArrayOfBytes = require("./helpers/randomArrayOfBytes.js");
 const assertRevert = require("./helpers/assertRevert.js");
 
+const SolidStamp = artifacts.require("SolidStamp");
 const SolidStampRegister = artifacts.require("SolidStampRegister");
 
 contract('SolidStampRegister', function(accounts) {
     const eq = assert.equal.bind(assert);
-    const [owner, contract, codeHash, codeHash2, auditor, auditor2, sender, sender2, /* rest */] = accounts;
+    const codeHash = '0x'+crypto.randomBytes(32).toString('hex'), codeHash2arr = crypto.randomBytes(32), codeHash2 = '0x'+codeHash2arr.toString('hex');
+    const reportIPFS = randomArrayOfBytes(80), reportIPFS2 = randomArrayOfBytes(80);
+    const [owner, contract, auditor, auditor2, sender, sender2,  /* rest */] = accounts;
 
     let ssr, NOT_AUDITED, AUDITED_AND_APPROVED, AUDITED_AND_REJECTED;
 
     beforeEach(async function () {
-        ssr = await SolidStampRegister.new([auditor, auditor2],[codeHash, codeHash2],[true, false], {from: owner});
+        ssr = await SolidStampRegister.new({from: owner});
         NOT_AUDITED = await ssr.NOT_AUDITED();
         AUDITED_AND_APPROVED = await ssr.AUDITED_AND_APPROVED();
         AUDITED_AND_REJECTED = await ssr.AUDITED_AND_REJECTED();
-        await ssr.changeSolidStampContract(contract);
+        ssr = await SolidStampRegister.new({from: owner});
+        ss = await SolidStamp.new(ssr.address, {from: owner});
+        await ssr.changeSolidStampContract(ss.address);
     });
 
-    describe("#constructor", function () {
-        it("should revert on length of arguments mismatch", async function() {
-            await assertRevert(SolidStampRegister.new([],[],[true], {from: owner}));
-            await assertRevert(SolidStampRegister.new([],[0x0],[], {from: owner}));
-            await assertRevert(SolidStampRegister.new([0x0],[],[true], {from: owner}));
-        });
-        it("should register audits upon contract constuction", async function() {
-            eq((await ssr.getAuditOutcome(auditor, codeHash, {from: sender})).valueOf(), AUDITED_AND_APPROVED.valueOf(), '1st audit not registered');
-            eq((await ssr.getAuditOutcome(auditor2, codeHash2, {from: sender})).valueOf(), AUDITED_AND_REJECTED.valueOf(), '2nd audit not registered');
-        });
-    });
     describe("#getAuditOutcome", function() {
         it("should return registered audit", async function() {
-            await ssr.registerAuditOutcome(auditor, codeHash2, false, {from: contract});
-            eq((await ssr.getAuditOutcome(auditor, codeHash2, {from: sender})).valueOf(), AUDITED_AND_REJECTED.valueOf(), 'Audit not registered');
+            await ssr.registerAudit(codeHash, reportIPFS, false, {from: auditor});
+            eq((await ssr.getAuditOutcome(auditor, codeHash, {from: sender})).valueOf(), AUDITED_AND_REJECTED.valueOf(), 'Audit not registered');
         })
         it("should return NOT_AUDITED for unregistered audits", async function() {
-            eq((await ssr.getAuditOutcome(auditor2, codeHash, {from: sender})).valueOf(), NOT_AUDITED.valueOf(), 'Incorrect return for not audited contract');
+            eq((await ssr.getAuditOutcome(auditor2, codeHash, {from: sender2})).valueOf(), NOT_AUDITED.valueOf(), 'Incorrect return for not audited contract');
         })
     });
-    describe("#registerAuditOutcome", function() {
-        it("should revert if called not by the SolidStamp contract", async function() {
-            await assertRevert(ssr.registerAuditOutcome(auditor, codeHash2, false, {from: sender}))
+    describe("#getAuditReportIPFS", function() {
+        it("should return registered audit", async function() {
+            await ssr.registerAudit(codeHash, reportIPFS, false, {from: auditor});
+            eq((await ssr.getAuditReportIPFS(auditor, codeHash, {from: sender})).valueOf(), web3.toHex(reportIPFS), 'Audit not registered');
         })
-        it("should revert if called by the owner", async function() {
-            await assertRevert(ssr.registerAuditOutcome(auditor, codeHash2, false, {from: owner}))
+        it("should return 0x for unregistered audits", async function() {
+            eq((await ssr.getAuditReportIPFS(auditor2, codeHash, {from: sender2})).valueOf(), "0x", 'Incorrect return for not audited contract');
         })
-        it("should revert if auditor is empty", async function() {
-            await assertRevert(ssr.registerAuditOutcome(0x0, codeHash2, false, {from: owner}))
+    });
+    describe("#registerAudit", function() {
+        it("should revert if codeHash is empty", async function() {
+            await assertRevert(ssr.registerAudit(0x0, reportIPFS, false, {from: auditor}))
+        })
+        it("should revert if report IPFS is empty", async function() {
+            await assertRevert(ssr.registerAudit(codeHash2, 0x0, false, {from: auditor}))
         })
         it("should register the audit and emit event", async function() {
-            result = (await ssr.registerAuditOutcome(auditor, codeHash2, false, {from: contract}));
+            result = (await ssr.registerAudit(codeHash2, reportIPFS, false, {from: auditor}));
             hash2 = '0x' + abi.soliditySHA3(
-                [ "address", "bytes32" ],
-                [ auditor, codeHash2 ]
+                [ "address", "bytes" ],
+                [ auditor, codeHash2arr ]
             ).toString('hex');
-            eq((await ssr.AuditOutcomes(hash2)).valueOf(), AUDITED_AND_REJECTED.valueOf(), 'Audit not registered');
+            audit = (await ssr.Audits(hash2));
+            eq(audit[0].valueOf(), AUDITED_AND_REJECTED.valueOf(), 'Audit not registered (outcome)');
+            eq(audit[1].valueOf(), web3.toHex(reportIPFS), 'Audit not registered (report IPFS)');
             eq(result.logs.length, 1, "Incorrect number of events");
             eq(result.logs[0].event, "AuditRegistered", "No AuditRegistered event triggered");
             eq(result.logs[0].args['auditor'], auditor, 'Wrong event data (auditor)');
             eq(result.logs[0].args['isApproved'], false, 'Wrong event data (isApproved)');
         })
+        it("should revert if trying to register same audit again", async function(){
+            result = (await ssr.registerAudit(codeHash2, reportIPFS, false, {from: auditor}));
+            await assertRevert(ssr.registerAudit(codeHash2, reportIPFS, false, {from: auditor}));
+        })
     });
+    describe("#registerAudits", function () {
+        it("should register multiple audits", async function() {
+            const AUDITED_AND_APPROVED = await ssr.AUDITED_AND_APPROVED();
+            let result = await ssr.registerAudits([codeHash, codeHash2], reportIPFS, true, {from: auditor});
+            eq((await ssr.getAuditReportIPFS(auditor, codeHash, {from: sender})).valueOf(), web3.toHex(reportIPFS), 'Audit not registered');
+            eq((await ssr.getAuditReportIPFS(auditor, codeHash2, {from: sender})).valueOf(), web3.toHex(reportIPFS), 'Audit not registered');
+            eq((await ssr.getAuditOutcome(auditor, codeHash, {from: sender})).valueOf(), AUDITED_AND_APPROVED.valueOf(), 'Incorrect return for audited contract');
+            eq((await ssr.getAuditOutcome(auditor, codeHash2, {from: sender})).valueOf(), AUDITED_AND_APPROVED.valueOf(), 'Incorrect return for audited contract');
+        });
+
+    })
     describe("#changeSolidStampContract", function() {
         it("should fail if not called by owner", async function() {
             await assertRevert(ssr.changeSolidStampContract(sender2, {from: sender}))
@@ -70,10 +89,14 @@ contract('SolidStampRegister', function(accounts) {
         });
         it("should change SolidStamp contract", async function() {
             result = (await ssr.changeSolidStampContract(sender2, {from: owner}));
-            eq((await ssr.contractSolidStamp()), sender2, "SolidStamp contract not changed");
+            eq((await ssr.ContractSolidStamp()), sender2, "SolidStamp contract not changed");
             eq(result.logs.length, 1, "Incorrect number of events");
             eq(result.logs[0].event, "SolidStampContractChanged", "No SolidStampContractChanged event triggered");
             eq(result.logs[0].args['newSolidStamp'], sender2, 'Wrong event data (newSolidStamp)');
         });
     });
+
+    it("contract should not accept arbitrary ether", async function(){
+        await assertRevert(ss.sendTransaction({from:sender2, value:10}));
+    });    
 });

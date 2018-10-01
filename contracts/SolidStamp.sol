@@ -25,8 +25,8 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
     // @dev amount of collected commision available to withdraw
     uint public AvailableCommission = 0;
 
-    // @dev commission percentage, initially 9%
-    uint public Commission = 9;
+    // @dev commission percentage, initially 1%
+    uint public Commission = 1;
 
     /// @dev event fired when the service commission is changed
     event NewCommission(uint commmission);
@@ -61,7 +61,7 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
     /// @dev event fired when an request is sucessfully withdrawn
     event RequestWithdrawn(address auditor, address bidder, bytes32 codeHash, uint amount);
     /// @dev event fired when a contract is sucessfully audited
-    event ContractAudited(address auditor, bytes32 codeHash, uint reward, bool isApproved);
+    event ContractAudited(address auditor, bytes32 codeHash, bytes reportIPFS, bool isApproved, uint reward);
 
     /// @notice registers an audit request
     /// @param _auditor the address of the auditor the request is directed to
@@ -132,29 +132,33 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
         msg.sender.transfer(amount);
     }
 
-    /// @notice marks contract as audited
+    /// @notice transfers reward to the auditor. Called by SolidStampRegister after the contract is audited
+    /// @param _auditor the auditor who audited the contract
     /// @param _codeHash the code hash of the stamped contract. _codeHash equals to sha3 of the contract byte-code
+    /// @param _reportIPFS IPFS hash of the audit report
     /// @param _isApproved whether the contract is approved or rejected
-    function auditContract(bytes32 _codeHash, bool _isApproved)
-    public whenNotPaused
+    function auditContract(address _auditor, bytes32 _codeHash, bytes _reportIPFS, bool _isApproved)
+    public whenNotPaused onlySolidStampRegisterContract
     {
-        bytes32 hashAuditorCode = keccak256(abi.encodePacked(msg.sender, _codeHash));
-
-        // revert if the contract is already audited by the auditor
-        uint8 outcome = SolidStampRegister(SolidStampRegisterAddress).getAuditOutcome(msg.sender, _codeHash);
-        require(outcome == NOT_AUDITED, "contract already audited");
-
-        SolidStampRegister(SolidStampRegisterAddress).registerAuditOutcome(msg.sender, _codeHash, _isApproved);
+        bytes32 hashAuditorCode = keccak256(abi.encodePacked(_auditor, _codeHash));
         uint reward = Rewards[hashAuditorCode];
         TotalRequestsAmount = TotalRequestsAmount.sub(reward);
         uint commissionKept = calcCommission(reward);
         AvailableCommission = AvailableCommission.add(commissionKept);
-        emit ContractAudited(msg.sender, _codeHash, reward, _isApproved);
-        msg.sender.transfer(reward.sub(commissionKept));
+        emit ContractAudited(_auditor, _codeHash, _reportIPFS, _isApproved, reward);
+        _auditor.transfer(reward.sub(commissionKept));
+    }
+
+    /**
+     * @dev Throws if called by any account other than the contractSolidStamp
+     */
+    modifier onlySolidStampRegisterContract() {
+      require(msg.sender == SolidStampRegisterAddress, "can be only run by SolidStampRegister contract");
+      _;
     }
 
     /// @dev const value to indicate the maximum commision service owner can set
-    uint public constant MAX_COMMISSION = 33;
+    uint public constant MAX_COMMISSION = 9;
 
     /// @notice ability for owner to change the service commmission
     /// @param _newCommission new commision percentage
@@ -191,7 +195,7 @@ contract SolidStamp is Ownable, Pausable, Upgradable {
         super.unpause();
     }
 
-    /// @notice We don't welcome tips & donations
+    /// @notice We don't want your arbitrary ether
     function() payable public {
         revert();
     }

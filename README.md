@@ -28,13 +28,15 @@ truffle test
 ### Deployed Addresses
 
 #### Mainnet
-SolidStampRegister [0xFfE73766Ed803769cDaEA47470E66fdfa5308c22](https://etherscan.io/address/0xFfE73766Ed803769cDaEA47470E66fdfa5308c22)
-SolidStamp [0x16964D770439B1d2Ae84EC96a18eDb1657CFfEcF](https://etherscan.io/address/0x16964D770439B1d2Ae84EC96a18eDb1657CFfEcF)
+SolidStampRegister [0x39b46de96cFe29fFCf225e899B8ffe1f7fBbA59e](https://etherscan.io/address/0x39b46de96cFe29fFCf225e899B8ffe1f7fBbA59e)
+
+SolidStamp [0x165cFb9cCf8b185E03205Ab4118eA6afBdbA9203](https://etherscan.io/address/0x165cFb9cCf8b185E03205Ab4118eA6afBdbA9203)
 
 
 #### Ropsten
-SolidStampRegister [0x165cFb9cCf8b185E03205Ab4118eA6afBdbA9203](https://etherscan.io/address/0x165cFb9cCf8b185E03205Ab4118eA6afBdbA9203)
-SolidStamp [0x034464DB73874a8650535f931D831439CAAEe29d](https://etherscan.io/address/0x034464DB73874a8650535f931D831439CAAEe29d)
+SolidStampRegister [0x77dbc13b80f2bbc31b92a40abb8c22e0e9b879d4](https://etherscan.io/address/0x77dbc13b80f2bbc31b92a40abb8c22e0e9b879d4)
+
+SolidStamp [0x8E12DFa382aE33563c77A1a62536D4F6Bf6D0d2F](https://etherscan.io/address/0x8E12DFa382aE33563c77A1a62536D4F6Bf6D0d2F)
 
 ## Built With
 * [Truffle](https://github.com/trufflesuite/truffle) - Ethereum development environment
