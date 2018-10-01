@@ -1,4 +1,4 @@
-1. Pause the SolidStamp v2 contract via MEW (Use contract ABI and call pause())
+1. Pause the SolidStamp v2 contract via MyCrypto (Use contract ABI and call pause())
 2. Compile and Deploy SolidStampRegister.
 3. Verify contract source code.
 4. Generate constructor data for SolidStamp contract (https://abi.sonnguyen.ws/)

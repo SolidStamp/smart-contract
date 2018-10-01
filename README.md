@@ -28,9 +28,9 @@ truffle test
 ### Deployed Addresses
 
 #### Mainnet
-SolidStampRegister [0xFfE73766Ed803769cDaEA47470E66fdfa5308c22](https://etherscan.io/address/0xFfE73766Ed803769cDaEA47470E66fdfa5308c22)
+SolidStampRegister [0x39b46de96cFe29fFCf225e899B8ffe1f7fBbA59e](https://etherscan.io/address/0x39b46de96cFe29fFCf225e899B8ffe1f7fBbA59e)
 
-SolidStamp [0x16964D770439B1d2Ae84EC96a18eDb1657CFfEcF](https://etherscan.io/address/0x16964D770439B1d2Ae84EC96a18eDb1657CFfEcF)
+SolidStamp [0x165cFb9cCf8b185E03205Ab4118eA6afBdbA9203](https://etherscan.io/address/0x165cFb9cCf8b185E03205Ab4118eA6afBdbA9203)
 
 
 #### Ropsten
